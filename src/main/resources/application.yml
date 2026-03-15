@@ -1,0 +1,17 @@
+server:
+  port: 8099
+
+spring:
+  application:
+    name: censusflow
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+  info:
+    title: CensusFlow API
+    description: Standardized Group Benefit Data API
+    version: 1.0.0
