@@ -1,0 +1,179 @@
+openapi: 3.0.3
+info:
+  title: "CensusFlow: Standardized Group Benefits Data API"
+  description: "A REST API that validates, cleans, and transforms raw employee census data into a standardized JSON format ready for insurance carrier rating engines."
+  version: 1.0.0
+  contact:
+    name: CoverPoint Broker
+paths:
+  /api/v1/census/validate:
+    post:
+      tags:
+        - census Validation
+      summary: Validate and transform employee census data
+      description: Accepts an array of employee objects, validates the data, calculates insurance age, assigns rating areas, normalizes tobacco use, and returns transformed data with eligibility status and summary statistics.
+      requestBody:
+        description: Census request with employee records
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CensusRequest'
+            examples:
+              sample_census:
+                value:
+                  employees:
+                    - name: "Jane Smith"
+                      dob: "1990-05-15"
+                      zipCode: "90210"
+                      tobaccoUse: "no"
+                    - name: "John Doe"
+                      dob: "2010-08-22"
+                      zipCode: "91302"
+                      tobaccoUse: "Y"
+                    - name: "Alice Johnson"
+                      dob: "1955-01-10"
+                      zipCode: "10001"
+                      tobaccoUse: "false"
+      responses:
+        '200':
+          description: Census processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CensusResponse'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    CensusRequest:
+      type: object
+      description: census validation request containing an array of employee records
+      properties:
+        employees:
+          type: array
+          description: List of employee records to validate and transform
+          items:
+            $ref: '#/components/schemas/EmployeeRequest'
+    EmployeeRequest:
+      type: object
+      required:
+        - name
+        - dob
+      properties:
+        name:
+          type: string
+          description: Full name of the employee
+          example: "John Doe"
+        dob:
+          type: string
+          format: date
+          description: Date of birth in YYYY-MM-DD format
+          example: "1985-06-15"
+        zipCode:
+          type: string
+          description: 5-digit ZIP code
+          example: "90210"
+        tobaccoUse:
+          type: string
+          description: Tobacco use status (e.g., Y, yes, true, N, no, false)
+          example: "yes"
+    CensusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Overall processing status
+          example: "PROCESSED"
+        processedAt:
+          type: string
+          format: date-time
+          description: Timestamp of processing
+        summary:
+          $ref: '#/components/schemas/CensusSummary'
+        employees:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmployeeResponse'
+    EmployeeResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "John Doe"
+        dob:
+          type: string
+          format: date
+          example: "1985-06-15"
+        insuranceAge:
+          type: integer
+          description: Calculated insurance age based on current date
+          example: 38
+        zipCode:
+          type: string
+          example: "90210"
+        ratingArea:
+          type: integer
+          description: Assigned rating area (1-4)
+          example: 1
+        tobaccoUse:
+          type: boolean
+          description: Normalized tobacco use status
+          example: true
+        eligibilityStatus:
+          type: string
+          description: "Eligible, Ineligible, or Invalid"
+          example: "Eligible"
+        ineligibilityReason:
+          type: string
+          nullable: true
+          example: null
+        validationErrors:
+          type: array
+          items:
+            type: string
+          description: List of validation errors if the record is invalid
+    CensusSummary:
+      type: object
+      description: Summary statistics for processed census
+      properties:
+        totalEmployee:
+          type: integer
+          example: 3
+        eligibleCount:
+          type: integer
+          example: 2
+        ineligibleCount:
+          type: integer
+          example: 1
+        validationErrorCount:
+          type: integer
+          example: 0
+        tobaccoUserCount:
+          type: integer
+          example: 1
+    ErrorResponse:
+      type: object
+      description: Error response for malformed or invalid requests
+      properties:
+        status:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: "Request payload contains validation errors"
+        error:
+          type: string
+          example: "VALIDATION_ERROR"
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          type: array
+          items:
+            type: string
+          description: List of specified field-level errors

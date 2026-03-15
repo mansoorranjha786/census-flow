@@ -29,5 +29,75 @@ Built for **CoverPoint Broker** to streamline the group census intake process
 
 ## Getting Started
 
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/mansoorranjha786/census-flow.git
+   ```
+2. Run the application:
+   ```bash
+   mvn spring-boot:run
+   ```
+
+## API Documentation
+
+- **OpenAPI Specification**: [openapi.yaml](openapi.yaml)
+- **Swagger UI**: Accessible at `http://localhost:8080/swagger-ui.html` when the application is running.
+
+## Demonstration
+
+### Valid Census Processing
+Process a valid census with multiple employee records:
 ```bash
-git clone https://github.com/mansoorranjha786/census-flow.git
+curl -X POST http://localhost:8080/api/v1/census/validate \
+-H "Content-Type: application/json" \
+-d '{
+  "employees": [
+    {
+      "name": "Jane Smith",
+      "dob": "1990-05-15",
+      "zipCode": "90210",
+      "tobaccoUse": "no"
+    },
+    {
+      "name": "John Doe",
+      "dob": "1985-06-15",
+      "zipCode": "91302",
+      "tobaccoUse": "Y"
+    }
+  ]
+}'
+```
+
+### Invalid Payload (Validation Errors)
+Processing a payload with missing fields or invalid formats:
+```bash
+curl -X POST http://localhost:8080/api/v1/census/validate \
+-H "Content-Type: application/json" \
+-d '{
+  "employees": [
+    {
+      "name": "", 
+      "dob": "invalid-date",
+      "zipCode": "123",
+      "tobaccoUse": "maybe"
+    }
+  ]
+}'
+```
+
+### Ineligible Employee (Age-Based)
+Flagging an employee as "Ineligible" due to age (e.g., under 18 or over 65):
+```bash
+curl -X POST http://localhost:8080/api/v1/census/validate \
+-H "Content-Type: application/json" \
+-d '{
+  "employees": [
+    {
+      "name": "Young Person",
+      "dob": "2015-01-01",
+      "zipCode": "90210",
+      "tobaccoUse": "no"
+    }
+  ]
+}'
+```
